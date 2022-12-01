@@ -24,8 +24,8 @@ def ackermann_dynamics(x, u, dt=0.1, slip_magnitude=0.2):
     # move in a straight line if curvature is sufficiently small
     if abs(curvature) < 1e-6:
         return np.array([
-            px + speed * np.cos(heading_angle),
-            py + speed * np.sin(heading_angle),
+            px + np.cos(heading_angle) * speed * dt,
+            py + np.sin(heading_angle) * speed * dt,
             heading_angle
         ])
         
@@ -120,9 +120,24 @@ if __name__ == "__main__":
             control_law, x0, N
         )
 
-        pxs = [x[0] for x in xs]
-        pys = [x[1] for x in xs]
+        pxs, pys, heading_angles = zip(*xs)
+        speeds = [u[0] for u in us]
 
+        # plot the trajectory
         plt.plot(pxs, pys)
         plt.axis("equal")
+
+        # plot some nice pose arrows
+        arrows = [(
+            pxs[k], pys[k],
+            speeds[k] * np.cos(heading_angles[k]),
+            speeds[k] * np.sin(heading_angles[k])
+        ) for k in range(N)]
+        arrows_select = arrows[::N//10] + [arrows[-1]]   # plot sparse selection of states (including final)
+        print(len(arrows_select))
+        plt.quiver(
+            *zip(*arrows_select),
+            color=["red"] + ["black"]*(len(arrows_select)-2) + ["green"]
+        )     
+
         plt.show()
