@@ -33,3 +33,13 @@ plt.quiver(
 )     
 
 plt.show()
+
+# call a goal generator
+
+# while not within goal
+
+    # Generate reference trajectory from current pose to end pose
+
+    # Generate MPC control 
+
+    # Forward propagate

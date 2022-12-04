@@ -22,6 +22,16 @@ def sample_controller_3(x):
 
     return np.array([sign_drive*10, sign_steer*np.random.random()])
 
+# TODO: Create P control for velocity,
+
+# TODO: Create STANLEY CONTROLLER
+
+# TODO: Generate Refrence Trajcetory function 
+    # take a goal and current pose, and output the full list of states X and controlls U 
+
+# TODO: Create MPC controller function which calls MPC.py utility 
+
+
 # Example Usage
 if __name__ == "__main__":
     print("test")
