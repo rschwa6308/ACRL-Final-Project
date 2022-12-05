@@ -1,45 +1,22 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from controllers import *
-from dynamics import *
 from simulation import *
 from observations import *
+from goalFactory import *
+from rover import *
+from state import *
 
 
-N = 100
+# initialize robot 
+x_0 = State(0,0,0.312,0) # starting pose, [px,py,theta,psi]
+rover = Rover(x_0) # other parameters associated with rover are defined in the class initliaztion
 
-x0 = np.array([0, 0, np.pi/2])
+# get goal pose
+goal = generate_easy_goal_turn(x_0.state)
+# goal = generate_easy_goal_straight(x_0.state)
 
-xs, ys, us = simulate(ackermann_dynamics, perfect_observations, sample_controller_3, x0, N)
+# do reference trajectory "fake" control
+xs, ys, us = simulate(rover, goal, perfect_observations, kmb_sample_controller_2)
 
-pxs, pys, heading_angles = zip(*xs)
-speeds = [u[0] for u in us]
-
-# plot the trajectory
-plt.plot(pxs, pys)
-plt.axis("equal")
-
-# plot some nice pose arrows
-arrows = [(
-    pxs[k], pys[k],
-    speeds[k] * np.cos(heading_angles[k]),
-    speeds[k] * np.sin(heading_angles[k])
-) for k in range(N)]
-arrows_select = arrows[::N//10] + [arrows[-1]]   # plot sparse selection of states (including final)
-print(len(arrows_select))
-plt.quiver(
-    *zip(*arrows_select),
-    color=["red"] + ["black"]*(len(arrows_select)-2) + ["green"]
-)     
-
-plt.show()
-
-# call a goal generator
-
-# while not within goal
-
-    # Generate reference trajectory from current pose to end pose
-
-    # Generate MPC control 
-
-    # Forward propagate
+# do MPC and "real" control 
