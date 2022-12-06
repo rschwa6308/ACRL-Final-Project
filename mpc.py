@@ -31,8 +31,8 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
     q = np.zeros([(m + n) * T, 1])  # quadratic cost 1st order term
     C = np.zeros([n * T, (m + n) * T])  # equality constraints LHS
     d = np.zeros([n * T, 1])  # equality constraints RHS
-    G = np.zeros([3 * T, (m + n) * T])  # inequality constraints LHS
-    h = np.zeros([3 * T, 1])  # inequality constraints RHS
+    G = np.zeros([6 * T, (m + n) * T])  # inequality constraints LHS
+    h = np.zeros([6 * T, 1])  # inequality constraints RHS
 
     # state and control constraints from 'rover.py'
     # self.wheel_angle_limit = 0.5  # [radians]
@@ -51,13 +51,19 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
         if i > 0:
             C[n * i: n * i + n, (m + n) * i - n:  (m + n) * i] = A
 
-        G[3 * i, (m + n) * i + 3] = 1  # angle limit psi
-        G[3 * i+1, (m + n) * i + 4] = 1  # velocity limit v
-        G[3 * i + 2, (m + n) * i + 5] = 1  # angle_velocity limit psi_dot
+        G[6 * i, (m + n) * i + 3] = 1  # angle limit psi
+        G[6 * i + 1, (m + n) * i + 4] = 1  # velocity limit v
+        G[6 * i + 2, (m + n) * i + 5] = 1  # angle_velocity limit psi_dot
+        G[6 * i + 3, (m + n) * i + 3] = -1
+        G[6 * i + 4, (m + n) * i + 4] = -1
+        G[6 * i + 5, (m + n) * i + 5] = -1
 
-        h[3 * i, :] = 0.5
-        h[3 * i + 1, :] = 1
-        h[3 * i + 2, :] = 1
+        h[6 * i, :] = 0.5
+        h[6 * i + 1, :] = 1
+        h[6 * i + 2, :] = 1
+        h[6 * i + 3, :] = -0.5
+        h[6 * i + 4, :] = -1
+        h[6 * i + 5, :] = -1
 
     P[-n:, -n:] = Qf
     q[-n:, :] = -np.matmul(Qf, x_ref[-n:, :] - xeq)
@@ -80,11 +86,13 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
 #  Input: state x, and control u,
 #  output: A and B matrices, x equilibrium point xeq, u equilibrium point ueq
 
-def linearize_dynamics(x, u):
+def linearize_dynamics(x, u, dt):
     """
-    Input: state x, control u
+    Input: state x, control u, time step dt
     Output: A and B matrices, x equilibrium point xeq, u equilibrium point ueq
     """
+
+
 
     return A_lin, B_lin, xeq, ueq
 
