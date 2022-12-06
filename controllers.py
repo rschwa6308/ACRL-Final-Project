@@ -55,19 +55,24 @@ def stabalizing_control(x, goal):
     px_des, py_des, theta_des, psi_des = goal
 
     theta = theta % (2*np.pi)
+
     theta_des = theta_des % (2*np.pi)
+    
     diff = (theta_des - theta) % (2*np.pi)
+    
     z_component = np.sin(theta_des) * np.cos(theta) - np.cos(theta_des) * np.sin(theta)
 
     if z_component>0:
         diff = -1*diff 
 
     kv = -1
-    ktheta = -0.1 
+    
+    ktheta = 0.01 
 
     v = kv * ((px-px_des)*np.cos(theta) + (py-py_des)*np.sin(theta))
 
     # psi_dot = ktheta * ((theta-theta_des) - np.arctan2(py_des-py,px_des-px)) This is from the HW should work? 
+    
     psi_dot = ktheta * ((diff))
 
     return np.array([v, psi_dot])

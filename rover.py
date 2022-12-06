@@ -8,7 +8,7 @@ class Rover:
         self.velocity_limit = 1 # [m/s]
         self.wheel_base = 1 # [m]
         self.dt = 0.01 # [seconds]
-        self.max_iters = 100000 # [iterations]
+        self.max_iters = 10000 # [iterations]
         self.goal_threshold = 0.05 # [meters]
         self.state = init_state.state
 
@@ -35,7 +35,9 @@ class Rover:
         # update state 
         px_new = px + (v*dt*np.cos(psi)*np.cos(theta))
         py_new = py + (v*dt*np.cos(psi)*np.sin(theta))
-        theta_new = theta + (v*dt*np.sin(psi)*self.wheel_base/2)%(2*np.pi)
+
+        # This line is sus, need to determine how we want to represent angle (0:2pi) (-pi:pi) ?
+        theta_new = (theta + (v*dt*np.sin(psi)*self.wheel_base/2)%(2*np.pi))%(2*np.pi)
 
         # clamp turn radius
         psi_attempt = psi + (psi_dot*dt)
