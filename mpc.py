@@ -31,6 +31,13 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
     q = np.zeros([(m + n) * T, 1])  # quadratic cost 1st order term
     C = np.zeros([n * T, (m + n) * T])  # equality constraints LHS
     d = np.zeros([n * T, 1])  # equality constraints RHS
+    G = np.zeros([3 * T, (m + n) * T])  # inequality constraints LHS
+    h = np.zeros([3 * T, 1])  # inequality constraints RHS
+
+    # state and control constraints from 'rover.py'
+    # self.wheel_angle_limit = 0.5  # [radians]
+    # self.wheel_angle_velocity_limit = 1  # [radians / sec]
+    # self.velocity_limit = 1  # [m/s]
 
     for i in range(T):
         P[(m + n) * i:(m + n) * i + m, (m + n) * i:(m + n) * i + m] = R
@@ -44,10 +51,18 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
         if i > 0:
             C[n * i: n * i + n, (m + n) * i - n:  (m + n) * i] = A
 
+        G[3 * i, (m + n) * i + 3] = 1  # angle limit psi
+        G[3 * i+1, (m + n) * i + 4] = 1  # velocity limit v
+        G[3 * i + 2, (m + n) * i + 5] = 1  # angle_velocity limit psi_dot
+
+        h[3 * i, :] = 0.5
+        h[3 * i + 1, :] = 1
+        h[3 * i + 2, :] = 1
+
     P[-n:, -n:] = Qf
     q[-n:, :] = -np.matmul(Qf, x_ref[-n:, :] - xeq)
 
-    res = solve_qp(P, q, C, d)
+    res = solve_qp(P, q, G, h, C, d)
 
     u = res[0:m]  # control at the first time step
 
