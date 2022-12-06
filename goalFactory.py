@@ -38,11 +38,11 @@ def generate_easy_goal_turn(state):
     if np.random.random() > 0.5:
         sign = -1
 
-    ang = sign * np.random.random() * np.pi/4
+    ang = sign* np.random.uniform(np.pi/3, np.pi/2)
     dist1 = 10
-    dist2 = 5
+    dist2 = 8
 
-    x_goal = x + dist1 * np.cos(theta) + dist2* np.cos(ang)
-    y_goal = y + dist1 * np.sin(theta) + dist2* np.sin(ang)
+    x_goal = x + dist1 * np.cos(theta) + dist2* np.cos(theta + ang)
+    y_goal = y + dist1 * np.sin(theta) + dist2* np.sin(theta + ang)
 
     return np.array([x_goal,y_goal,theta+ang,0])

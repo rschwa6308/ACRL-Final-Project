@@ -5,7 +5,7 @@ from observations import *
 from rover import *
 from state import *
 
-def simulate(rover, goal, observation_func, control_law):
+def simulate(rover, goal, observation_func, control_law, stopping_condition=None, max_iters=1000, dt=0.1):
     """ Simulate discrete system
 
     Args:
@@ -13,23 +13,25 @@ def simulate(rover, goal, observation_func, control_law):
         goal (STATE): goal pose rover should drive to
         observation_func (function): points to function in observations.py
         control_law (function): points to function in controllers.py
+        stopping_condition (function): points to function in stopping_conditions.py
+        max_iters (int): terminate if stopping_condition has not been reached after a set time
+        dt (float): timestep
 
     Returns:
         xs, ys, us: nparrays of all STATES, MEASUREMENTS, CONTROLS
     """
-    N = rover.max_iters
 
     xs = [rover.state]
     ys = []
     us = []
 
-    for k in range(N):
+    for k in range(max_iters):
 
         # observe current state
         ys.append(observation_func(xs[k]))
 
         # desired control
-        v, psi_dot = control_law(ys[k],goal)
+        v, psi_dot = control_law(ys[k], goal, dt)
 
         # clamped control
         v = max(-rover.velocity_limit, min(v, rover.velocity_limit))
@@ -39,14 +41,13 @@ def simulate(rover, goal, observation_func, control_law):
         us.append(np.array([v, psi_dot]))
         
         # forward dynamics with control
-        xs.append(rover.ackermann_kbm_dynamics(us[k]))
+        xs.append(rover.ackermann_kbm_dynamics(us[k], dt))
 
-        # TODO add break function for exiting once goal threshold is reached as defined in rover class
+        # break early if stopping condition has been met
+        if stopping_condition is not None:
+            if stopping_condition(xs[-1], goal):
+                break
     
-    plot_traj(rover,goal,xs,us)
-    plot_control(rover,goal,xs,us)
-    plot_states(rover,goal,xs,us)
-
     return xs, ys, us
 
 
@@ -58,6 +59,7 @@ def plot_traj(rover,goal,xs,us):
     plt.arrow(goal[0], goal[1], np.cos(goal[2]), np.sin(goal[2]), color='red', head_width = 0.2, width = 0.05)
 
     path_length = len(us)
+    vs, psi_dots = zip(*us)
 
     pxs, pys, heading_angles, steering_angles = zip(*xs)
 
@@ -68,8 +70,8 @@ def plot_traj(rover,goal,xs,us):
     # plot some nice pose arrows
     arrows = [(
         pxs[k], pys[k],
-        np.cos(heading_angles[k]),
-        np.sin(heading_angles[k])
+        np.cos(heading_angles[k]) * np.sign(vs[k]),
+        np.sin(heading_angles[k]) * np.sign(vs[k])
     ) for k in range(path_length)]
 
     arrows_select = arrows[::path_length//10] + [arrows[-1]]   # plot sparse selection of states (including final)

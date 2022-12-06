@@ -7,14 +7,12 @@ class Rover:
         self.wheel_angle_velocity_limit = 1 # [radians / sec]
         self.velocity_limit = 1 # [m/s]
         self.wheel_base = 1 # [m]
-        self.dt = 0.01 # [seconds]
-        self.max_iters = 10000 # [iterations]
         self.goal_threshold = 0.05 # [meters]
         self.state = init_state.state
 
         self.dynamics = 'ackerman_kbm'
 
-    def ackermann_kbm_dynamics(self, u):
+    def ackermann_kbm_dynamics(self, u, dt):
         """
         Idealized Ackermann Steering Dynamics
 
@@ -27,7 +25,6 @@ class Rover:
 
         # get state 
         px, py, theta, psi = self.state
-        dt = self.dt
 
         # get control
         v, psi_dot = u
