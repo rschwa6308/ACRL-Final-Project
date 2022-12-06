@@ -81,12 +81,6 @@ def stabilizing_control(x, goal, dt):
 def smalled_angle_diff(a, b):
     return (a - b + np.pi) % (np.pi*2) - np.pi
 
-    # diff = (a - b) % (2*np.pi)
-
-    # if diff > np.pi:
-    #     return 2*np.pi - diff
-    # else:
-    #     return diff
 
 
 
@@ -112,16 +106,9 @@ def stabilizing_control_ignore_heading(x, goal, dt):
     k_psi_dot = 0.2
 
     v = -k_v/dt * ((px - px_des) * np.cos(theta_from_goal) + (py - py_des) * np.sin(theta_from_goal))
-    # v = 0.2
-    # print(px - px_des, py - py_des)
-    # print(v)
-
-
 
     psi_desired = -k_psi/dt * -theta_error
     psi_dot = -k_psi_dot/dt * (psi - psi_desired)
-
-    print(psi_desired, psi_dot)
 
     return np.array([v, psi_dot])
 
