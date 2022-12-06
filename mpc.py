@@ -62,7 +62,15 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
     P[-n:, -n:] = Qf
     q[-n:, :] = -np.matmul(Qf, x_ref[-n:, :] - xeq)
 
-    res = solve_qp(P, q, G, h, C, d)
+    # need to reshape before passing to solver
+    q = q.reshape(((m + n) * T, ))
+    h = h.reshape((3 * T, ))
+    d = d.reshape((n * T, ))
+
+    res = solve_qp(P, q, G, h, C, d, solver='quadprog')
+    # solvers.options['feastol'] = 1e-8
+    # solvers.options['show_progress'] = False
+    # res = solvers.qp(P, q, G, h, C, d)
 
     u = res[0:m]  # control at the first time step
 
@@ -83,6 +91,26 @@ def linearize_dynamics(x, u):
 
 # for debug
 if __name__ == "__main__":
+    # QP solver test. Passed
+
+    # import qpsolvers
+    # print(qpsolvers.available_solvers)
+    #
+    # M = np.array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]])
+    # P = np.dot(M.T, M)  # quick way to build a symmetric matrix
+    # q = np.dot(np.array([3., 2., 3.]), M).reshape((3,))
+    # G = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]])
+    # h = np.array([3., 2., -2.]).reshape((3,))
+    # A = np.array([1., 1., 1.])
+    # b = np.array([1.])
+    #
+    # res = solve_qp(P, q, G, h, A, b, solver='quadprog')
+    #
+    # print(res)
+    #
+    # print(b.shape)
+    # print(h.shape)
+
     x0 = np.transpose(np.array([0, 0, 0, np.pi/2]))
     n = 4  # state dimension
     m = 2  # control dimension
@@ -100,5 +128,7 @@ if __name__ == "__main__":
     x_ref = 2*np.ones([n*T, 1])
 
     u = mpc_control(x0, x_ref, u_ref, Q, R, Qf, T, A, B)
+
+    print(u)
 
 
