@@ -30,10 +30,13 @@ goal = generate_easy_goal_turn(x_0.state)
 reference_trajectory_xs, _, reference_trajectory_us = simulate(
     rover_ref, goal, perfect_observations,
     stabilizing_control_ignore_heading,
-    stopping_condition=goal_reached,
+    stopping_condition=goal_reached_ignore_heading,
     max_iters=1000,
     dt=0.1
 )
+
+for i in range(1,10):
+    reference_trajectory_xs[-i] = goal
 
 print(f"Reference simulation terminated after {len(reference_trajectory_us)} iterations")
 
