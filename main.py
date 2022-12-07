@@ -30,7 +30,7 @@ goal = generate_easy_goal_turn(x_0.state)
 reference_trajectory_xs, _, reference_trajectory_us = simulate(
     rover_ref, goal, perfect_observations,
     stabilizing_control_ignore_heading,
-    stopping_condition=goal_reached_ignore_heading,
+    stopping_condition=goal_reached,
     max_iters=1000,
     dt=0.1
 )
