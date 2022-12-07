@@ -10,7 +10,12 @@ from state import *
 
 
 # initialize robot 
-x_0 = State(0,0,0.312,0)    # starting pose, [px,py,theta,psi]
+x_0 = State(
+    np.random.uniform(-3, 3),
+    np.random.uniform(-3, 3),
+    np.random.uniform(0, 2*np.pi),
+    0
+)    # starting pose, [px,py,theta,psi]
 rover = Rover(x_0)
 
 
@@ -18,14 +23,23 @@ rover = Rover(x_0)
 # goal = generate_easy_goal_straight(x_0.state)
 goal = generate_easy_goal_turn(x_0.state)
 
-
+                         
 # do reference trajectory "fake" control
-# xs, ys, us = simulate(rover, goal, perfect_observations, kmb_sample_controller_1)
-# xs, ys, us = simulate(rover, goal, perfect_observations, kmb_sample_controller_2)
-# xs, ys, us = simulate(rover, goal, perfect_observations, stabilizing_control)
-xs, ys, us = simulate(
+reference_trajectory_xs, _, reference_trajectory_us = simulate(
     rover, goal, perfect_observations,
     stabilizing_control_ignore_heading,
+    stopping_condition=goal_reached_ignore_heading,
+    max_iters=1000,
+    dt=0.1
+)
+
+
+# run MPC!  :D
+xs, ys, us = simulate_with_MPC(
+    rover, goal, perfect_observations,
+    MPC_controller_wrapper_TODO,
+    reference_trajectory_xs,
+    reference_trajectory_us,
     stopping_condition=goal_reached_ignore_heading,
     max_iters=1000,
     dt=0.1
