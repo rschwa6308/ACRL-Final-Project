@@ -52,6 +52,64 @@ def simulate(rover, goal, observation_func, control_law, stopping_condition=None
 
 
 
+def simulate_with_MPC(rover, goal, observation_func, MPC_controller, reference_trajectory_xs, reference_trajectory_us, stopping_condition=None, max_iters=1000, dt=0.1):
+    """ Simulate discrete system for use with the MPC controller
+
+    Args:
+        rover (ROVER): rover class to simulate
+        goal (STATE): goal pose rover should drive to
+        observation_func (function): points to function in observations.py
+        control_law (function): points to function in controllers.py
+        stopping_condition (function): points to function in stopping_conditions.py
+        max_iters (int): terminate if stopping_condition has not been reached after a set time
+        dt (float): timestep
+
+    Returns:
+        xs, ys, us: nparrays of all STATES, MEASUREMENTS, CONTROLS
+    """
+
+
+    xs = [rover.state]
+    ys = []
+    us = []
+
+    for k in range(max_iters):
+
+        # observe current state
+        ys.append(observation_func(xs[k]))
+
+        # desired control
+        v, psi_dot = MPC_controller(ys[k], goal, dt, reference_trajectory_xs, reference_trajectory_us, k, rover)
+
+        """
+        In theory, MPC_controller (above) will internally use reference_trajectory_xs[k:k+T]
+        as the reference trajectory where T is the MPC horizon
+
+        OR
+
+        We try to find the point in the reference trajectory that is closest (L2-norm)
+        to our current actual state. (WARNING: HACKY lol, but not a terrible idea)
+        """
+
+        # clamped control
+        v = max(-rover.velocity_limit, min(v, rover.velocity_limit))
+        psi_dot = max(-rover.wheel_angle_velocity_limit, min(psi_dot, rover.wheel_angle_velocity_limit))            
+
+        # appended control 
+        us.append(np.array([v, psi_dot]))
+        
+        # forward dynamics with control
+        xs.append(rover.ackermann_kbm_dynamics(us[k], dt))
+
+        # break early if stopping condition has been met
+        if stopping_condition is not None:
+            if stopping_condition(xs[-1], goal):
+                break
+    
+    return xs, ys, us
+
+
+
 def plot_traj(rover,goal,xs,us):
 
     # --------------------------------------------------------------------
