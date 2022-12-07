@@ -110,7 +110,7 @@ def simulate_with_MPC(rover, goal, observation_func, MPC_controller, reference_t
 
 
 
-def plot_traj(rover,goal,xs,us):
+def plot_traj(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rover2_name=None):
 
     # --------------------------------------------------------------------
     # plot goal arrow
@@ -118,11 +118,10 @@ def plot_traj(rover,goal,xs,us):
 
     path_length = len(us)
     vs, psi_dots = zip(*us)
-
     pxs, pys, heading_angles, steering_angles = zip(*xs)
 
     # plot the trajectory
-    plt.plot(pxs, pys)
+    plt.plot(pxs, pys, label=rover_name)
     plt.axis("equal")
 
     # plot some nice pose arrows
@@ -138,57 +137,100 @@ def plot_traj(rover,goal,xs,us):
         *zip(*arrows_select),
         color=["red"] + ["black"]*(len(arrows_select)-2) + ["green"]
     )
+    plot_rover2 = (rover2 is not None) and (xs2 is not None) and (us2 is not None) and (rover2_name is not None)
+    if plot_rover2:
+        path_length = len(us2)
+        vs, psi_dots = zip(*us2)
+        pxs, pys, heading_angles, steering_angles = zip(*xs2)
+
+        # plot the trajectory
+        plt.plot(pxs, pys, label=rover2_name, zorder=0)
+        plt.axis("equal")
+
+        # plot some nice pose arrows
+        arrows = [(
+            pxs[k], pys[k],
+            np.cos(heading_angles[k]) * np.sign(vs[k]),
+            np.sin(heading_angles[k]) * np.sign(vs[k])
+        ) for k in range(path_length)]
+
+        arrows_select = arrows[::path_length//10] + [arrows[-1]]   # plot sparse selection of states (including final)
+        # print(len(arrows_select))
+        plt.quiver(
+            *zip(*arrows_select),
+            color=["red"] + ["black"]*(len(arrows_select)-2) + ["green"]
+        )
+    plt.title("Trajectory Results")
+    plt.legend()
     plt.show()
 
     
-def plot_control(rover,goal,xs,us):
+def plot_control(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rover2_name=None):
 
     speeds = [u[0] for u in us]
     delta_steer = [u[1] for u in us]
 
+    plot_rover2 = (rover2 is not None) and (xs2 is not None) and (us2 is not None) and (rover2_name is not None)
+    if plot_rover2:
+        speeds2 = [u[0] for u in us2]
+        delta_steer2 = [u[1] for u in us2]
+
     plt.figure(figsize=(8, 6), dpi=80)
     plt.subplot(2, 1, 1)
-    plt.axhline(y = rover.velocity_limit, color = 'r', linestyle = 'dotted')
+    plt.axhline(y = rover.velocity_limit, color = 'r', linestyle = 'dotted', label='Bound')
     plt.axhline(y = -rover.velocity_limit, color = 'r', linestyle = 'dotted')
-    plt.plot(speeds)
+    plt.plot(speeds, label=rover_name)
+    if plot_rover2: plt.plot(speeds2, label=rover2_name, zorder=0)
     plt.title("Control Inputs - Velocity")
+    plt.legend()
     plt.subplot(2, 1, 2)
-    plt.axhline(y = rover.wheel_angle_velocity_limit, color = 'r', linestyle = 'dotted')
+    plt.axhline(y = rover.wheel_angle_velocity_limit, color = 'r', linestyle = 'dotted', label='Bound')
     plt.axhline(y = -rover.wheel_angle_velocity_limit, color = 'r', linestyle = 'dotted')
-    plt.plot(delta_steer)
+    plt.plot(delta_steer, label=rover_name)
+    if plot_rover2: plt.plot(delta_steer2, label=rover2_name, zorder=0)
     plt.title("Control Inputs - Change in Steer")
+    plt.legend()
     plt.show()
     
-def plot_states(rover,goal,xs,us):
+def plot_states(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rover2_name=None):
 
     pxs, pys, heading_angles, steering_angles = zip(*xs)
 
     pxs_g, pys_g, heading_angles_g, steering_angles_g = goal
 
-    speeds = [u[0] for u in us]
-    delta_steer = [u[1] for u in us]
+    plot_rover2 = (rover2 is not None) and (xs2 is not None) and (us2 is not None) and (rover2_name is not None)
+    if plot_rover2:
+        pxs2, pys2, heading_angles2, steering_angles2 = zip(*xs2)
 
     plt.figure(figsize=(8, 6), dpi=80)
 
     plt.subplot(2, 2, 1)
-    plt.axhline(y = pxs_g, color = 'r', linestyle = 'dotted')
-    plt.plot(pxs)
+    plt.axhline(y = pxs_g, color = 'k', linestyle = 'dotted', label='Goal')
+    plt.plot(pxs, label=rover_name)
+    if plot_rover2: plt.plot(pxs2, label=rover2_name, zorder=0)
     plt.title("Px vs. Goal")
+    plt.legend()
 
     plt.subplot(2, 2, 2)
-    plt.axhline(y = pys_g, color = 'r', linestyle = 'dotted')
-    plt.plot(pys)
+    plt.axhline(y = pys_g, color = 'k', linestyle = 'dotted', label='Goal')
+    plt.plot(pys, label=rover_name)
+    if plot_rover2: plt.plot(pys2, label=rover2_name, zorder=0)
     plt.title("Py vs. Goal")
+    plt.legend()
 
     plt.subplot(2, 2, 3)
-    plt.axhline(y = heading_angles_g, color = 'r', linestyle = 'dotted')
-    plt.plot(heading_angles)
+    plt.axhline(y = heading_angles_g, color = 'k', linestyle = 'dotted', label='Goal')
+    plt.plot(heading_angles, label=rover_name)
+    if plot_rover2: plt.plot(heading_angles2, label=rover2_name, zorder=0)
     plt.title("Heading vs. Goal")
+    plt.legend()
 
     plt.subplot(2, 2, 4)
-    plt.axhline(y = steering_angles_g, color = 'r', linestyle = 'dotted')
-    plt.plot(steering_angles)
+    plt.axhline(y = steering_angles_g, color = 'k', linestyle = 'dotted', label='Goal')
+    plt.plot(steering_angles, label=rover_name)
+    if plot_rover2: plt.plot(steering_angles2, label=rover2_name, zorder=0)
     plt.title("Steering vs. Goal")
+    plt.legend()
 
     plt.show()
 

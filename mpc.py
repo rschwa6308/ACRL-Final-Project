@@ -14,7 +14,7 @@ from rover import *
 #  Input: Current state [x], reference trajectory [X,U], cost matrices Q, R, Q_f, MPC horizon T, linearized dynamics matrices A, B
 #  Output: control u
 
-def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, rover):
+def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, xeq, ueq, rover):
     """
     Input: current state x, reference trajectory x_ref, u_ref, cost matrices Q, R, Q_f,
             MPC horizon T, linearized dynamics matrices A, B
@@ -25,8 +25,8 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, rover):
 
     I = np.eye(n)
 
-    xeq = x.reshape(n,1)
-    ueq = u_ref[0:m, :]
+    xeq = xeq.reshape(n,1)
+    ueq = ueq.reshape(m,1)
 
     P = np.zeros([(m + n) * T, (m + n) * T])  # quadratic cost 2nd order term
     q = np.zeros([(m + n) * T, 1])  # quadratic cost 1st order term
@@ -39,11 +39,9 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, rover):
     # self.wheel_angle_limit = 0.5  # [radians]
     # self.wheel_angle_velocity_limit = 1  # [radians / sec]
     # self.velocity_limit = 1  # [m/s]
-
     for i in range(T):
         P[(m + n) * i:(m + n) * i + m, (m + n) * i:(m + n) * i + m] = R
         P[(m + n) * i + m:(m + n) * i + m + n, (m + n) * i + m:(m + n) * i + m + n] = Q
-
         q[(m + n) * i:(m + n) * i + m, :] = -np.matmul(R, u_ref[i*m:i*m+m, :] - ueq)
         q[(m + n) * i + m:(m + n) * i + m + n, :] = -np.matmul(Q, x_ref[i*n:i*n+n, :] - xeq)
 
@@ -62,16 +60,16 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, rover):
         h[6 * i, :] = 0.5
         h[6 * i + 1, :] = 1
         h[6 * i + 2, :] = 1
-        h[6 * i + 3, :] = -0.5
-        h[6 * i + 4, :] = -1
-        h[6 * i + 5, :] = -1
+        h[6 * i + 3, :] = 0.5
+        h[6 * i + 4, :] = 1
+        h[6 * i + 5, :] = 1
 
     P[-n:, -n:] = Qf
     q[-n:, :] = -np.matmul(Qf, x_ref[-n:, :] - xeq)
 
     # need to reshape before passing to solver
     q = q.reshape(((m + n) * T, ))
-    h = h.reshape((3 * T, ))
+    h = h.reshape((6 * T, ))
     d = d.reshape((n * T, ))
 
     res = solve_qp(P, q, G, h, C, d, solver='quadprog')
@@ -138,7 +136,8 @@ if __name__ == "__main__":
     # print(b.shape)
     # print(h.shape)
 
-    x0 = np.transpose(np.array([0, 0, 0, np.pi/2]))
+    # x0 = np.transpose(np.array([0, 0, 0, np.pi/2]))
+    x0 = State(0, 0, 0, np.pi/2)
     rover = Rover(x0)
     n = 4  # state dimension
     m = 2  # control dimension
@@ -154,8 +153,11 @@ if __name__ == "__main__":
 
     u_ref = np.ones([m*T, 1])
     x_ref = 2*np.ones([n*T, 1])
+    
+    xeq = x0.state.reshape(n,1)
+    ueq = u_ref[0:m, :]
 
-    u = mpc_control(x0, x_ref, u_ref, Q, R, Qf, T, A, B, rover)
+    u = mpc_control(x0.state, x_ref, u_ref, Q, R, Qf, T, A, B, xeq, ueq, rover)
 
     print(u)
 

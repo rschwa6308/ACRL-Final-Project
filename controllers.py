@@ -113,14 +113,65 @@ def stabilizing_control_ignore_heading(x, goal, dt):
 
     return np.array([v, psi_dot])
 
+def distance_between_states(x0, x1):
+    dist = np.linalg.norm(x0 - x1) # full vector
+    # dist = np.linalg.norm(x0[:2] - x1[:2]) # ignore heading
+    return dist
+
+def find_closest_state_idx(x, x_ref):
+    closest_state_idx = -1
+    closest_state_distance = np.inf
+    for i,xN in enumerate(x_ref):
+        new_dist = distance_between_states(x, xN)
+        if new_dist < closest_state_distance:
+            closest_state_idx = i
+            closest_state_distance = new_dist
 
 
-# TODO: Create MPC controller function which calls MPC.py utility 
-def mpc_controller(x, u_ref, goal, dt):
-    w_b = 1.0
+    return closest_state_idx
 
-    u_0 = u_ref[0:m, :] # first timestep of reference control
-    A, B, xeq, ueq = linearize_dynamics(x, u_0, dt, w_b)
+def make_ref_horizon(T, i_ref, x_ref, u_ref):
+    stop_idx = min(i_ref + T, len(u_ref))
+    x_ref_T = x_ref[i_ref:stop_idx]
+    u_ref_T = u_ref[i_ref:stop_idx]
 
-    mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B)
+    n_missing_entries = i_ref+T - len(u_ref)
+    if n_missing_entries > 0:
+        for _ in range(n_missing_entries):
+            x_ref_T.append(x_ref[-1])
+            u_ref_T.append(u_ref[-1])
+        
+    return x_ref_T, u_ref_T
 
+# TODO: Create MPC controller function which calls MPC.py utility
+def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
+    
+    n = 4  # state dimension
+    m = 2  # control dimension
+    T = 5  # MPC horizon
+
+    # cost functions
+    Q = np.array([[1, 0, 0, 0],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1]])
+    R = np.array([[1, 0],
+                  [0, 1]])
+    Qf = 1e3 * np.array([[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, 0, 1]])
+    # u_ref = np.ones([m*T, 1])
+    # x_ref = 2*np.ones([n*T, 1])
+    i_ref = find_closest_state_idx(x, x_ref)
+    x_ref_T, u_ref_T = make_ref_horizon(T, i_ref, x_ref, u_ref)
+
+    u_0 = u_ref_T[0] # first timestep of reference control
+    A, B, xeq, ueq = linearize_dynamics(x, u_0, dt, rover.wheel_base)
+
+    x_ref_T = np.array(x_ref_T).reshape((n*T, 1))
+    u_ref_T = np.array(u_ref_T).reshape((m*T, 1))
+    u = mpc_control(x, x_ref_T, u_ref_T, Q, R, Qf, T, A, B, xeq, ueq, rover)
+    v = u[0]
+    psi_dot = u[1]
+    return np.array([v, psi_dot])

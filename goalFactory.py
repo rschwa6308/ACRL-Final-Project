@@ -38,7 +38,8 @@ def generate_easy_goal_turn(state):
     if np.random.random() > 0.5:
         sign = -1
 
-    ang = sign* np.random.uniform(np.pi/3, np.pi/2)
+    # ang = sign* np.random.uniform(np.pi/3, np.pi/2)
+    ang = sign* np.pi/2
     dist1 = 10
     dist2 = 8
 
