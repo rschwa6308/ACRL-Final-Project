@@ -1,6 +1,7 @@
-from cvxopt import solvers, matrix
+# from cvxopt import solvers, matrix
 import numpy as np
 from qpsolvers import solve_qp
+from rover import *
 
 # solvers.options['feastol'] = 1e-8
 # solvers.options['show_progress'] = False
@@ -13,7 +14,7 @@ from qpsolvers import solve_qp
 #  Input: Current state [x], reference trajectory [X,U], cost matrices Q, R, Q_f, MPC horizon T, linearized dynamics matrices A, B
 #  Output: control u
 
-def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
+def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B, rover):
     """
     Input: current state x, reference trajectory x_ref, u_ref, cost matrices Q, R, Q_f,
             MPC horizon T, linearized dynamics matrices A, B
@@ -86,13 +87,31 @@ def mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B):
 #  Input: state x, and control u,
 #  output: A and B matrices, x equilibrium point xeq, u equilibrium point ueq
 
-def linearize_dynamics(x, u, dt):
+def linearize_dynamics(x, u, dt=0.1, w_b=1.0):
     """
     Input: state x, control u, time step dt
     Output: A and B matrices, x equilibrium point xeq, u equilibrium point ueq
     """
 
+    # Select equilibrium point
+    xeq = x
+    ueq = u
 
+    # Extract state and control values
+    v_t = ueq[0]
+    theta_t = xeq[2]
+    psi_t = xeq[3]
+
+    # Construction linearization matrices
+    A_lin = np.array([[1, 0, -v_t * dt * np.cos(psi_t) * np.sin(theta_t), -v_t * dt * np.sin(psi_t) * np.cos(theta_t)],
+                      [0, 1,  v_t * dt * np.cos(psi_t) * np.cos(theta_t), -v_t * dt * np.sin(psi_t) * np.sin(theta_t)],
+                      [0, 0, 1, v_t * dt * np.cos(psi_t) * w_b/2],
+                      [0, 0, 0, 1]])
+    
+    B_lin = np.array([[dt * np.cos(psi_t) * np.cos(theta_t), 0],
+                      [dt * np.cos(psi_t) * np.sin(theta_t), 0],
+                      [dt * np.sin(psi_t) * w_b/2, 0],
+                      [0, dt]])
 
     return A_lin, B_lin, xeq, ueq
 
@@ -120,6 +139,7 @@ if __name__ == "__main__":
     # print(h.shape)
 
     x0 = np.transpose(np.array([0, 0, 0, np.pi/2]))
+    rover = Rover(x0)
     n = 4  # state dimension
     m = 2  # control dimension
     T = 5  # MPC horizon
@@ -135,7 +155,7 @@ if __name__ == "__main__":
     u_ref = np.ones([m*T, 1])
     x_ref = 2*np.ones([n*T, 1])
 
-    u = mpc_control(x0, x_ref, u_ref, Q, R, Qf, T, A, B)
+    u = mpc_control(x0, x_ref, u_ref, Q, R, Qf, T, A, B, rover)
 
     print(u)
 

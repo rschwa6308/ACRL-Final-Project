@@ -1,4 +1,5 @@
 import numpy as np
+from mpc import *
 
 
 def kmb_sample_controller_1(x, goal, dt):
@@ -115,3 +116,11 @@ def stabilizing_control_ignore_heading(x, goal, dt):
 
 
 # TODO: Create MPC controller function which calls MPC.py utility 
+def mpc_controller(x, u_ref, goal, dt):
+    w_b = 1.0
+
+    u_0 = u_ref[0:m, :] # first timestep of reference control
+    A, B, xeq, ueq = linearize_dynamics(x, u_0, dt, w_b)
+
+    mpc_control(x, x_ref, u_ref, Q, R, Qf, T, A, B)
+
