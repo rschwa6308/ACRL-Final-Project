@@ -176,11 +176,11 @@ def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
 
     # initial MPC
     u, res = mpc_control(x, x_ref_T, u_ref_T, Q, R, Qf, T, A, B, xeq, ueq, rover)
-    
+
     if iterative_linearization:
     # iterative linearized MPC with state traj from the previous MPC
         u = mpc_control_iterative(x, x_ref_T, u_ref_T, Q, R, Qf, T, res, xeq, ueq, rover)
 
-    v = u[0]
-    psi_dot = u[1]
+    v = u[0] + ueq[0]
+    psi_dot = u[1] + ueq[1]
     return np.array([v, psi_dot])
