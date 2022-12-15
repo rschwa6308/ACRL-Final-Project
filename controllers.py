@@ -150,6 +150,8 @@ def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
     m = 2  # control dimension
     T = 20  # MPC horizon
 
+    iterative_linearization = True
+
     # cost functions
     Q = np.array([[1, 0, 0, 0],
                   [0, 1, 0, 0],
@@ -171,7 +173,14 @@ def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
 
     x_ref_T = np.array(x_ref_T).reshape((n*T, 1))
     u_ref_T = np.array(u_ref_T).reshape((m*T, 1))
-    u = mpc_control(x, x_ref_T, u_ref_T, Q, R, Qf, T, A, B, xeq, ueq, rover)
+
+    # initial MPC
+    u, res = mpc_control(x, x_ref_T, u_ref_T, Q, R, Qf, T, A, B, xeq, ueq, rover)
+    
+    if iterative_linearization:
+    # iterative linearized MPC with state traj from the previous MPC
+        u = mpc_control_iterative(x, x_ref_T, u_ref_T, Q, R, Qf, T, res, xeq, ueq, rover)
+
     v = u[0]
     psi_dot = u[1]
     return np.array([v, psi_dot])
