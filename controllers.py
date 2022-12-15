@@ -158,7 +158,7 @@ def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
                   [0, 0, 1, 0],
                   [0, 0, 0, 1]])
     R = np.array([[1, 0],
-                  [0, 1]])
+                  [0, 1e-10]])
     Qf = 1e3 * np.array([[1, 0, 0, 0],
                          [0, 1, 0, 0],
                          [0, 0, 1, 0],
