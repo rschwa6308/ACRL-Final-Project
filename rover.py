@@ -9,7 +9,7 @@ class Rover:
         self.wheel_base = 1 # [m]
         self.goal_threshold = 0.05 # [meters]
         self.state = init_state.state
-        self.min_turning_radius = self.wheel_base/(2 * np.sin(self.wheel_angle_limit))
+        self.min_turning_radius = (self.wheel_base/(2 * np.sin(self.wheel_angle_limit))) * 4
         if (slip):
             self.sKx = 0.08
             self.sKy = 0.08
