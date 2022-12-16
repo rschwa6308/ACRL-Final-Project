@@ -125,10 +125,15 @@ def plot_traj(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rove
     plt.axis("equal")
 
     # plot some nice pose arrows
+    # arrows = [(
+    #     pxs[k], pys[k],
+    #     np.cos(heading_angles[k]) * np.sign(vs[k]),
+    #     np.sin(heading_angles[k]) * np.sign(vs[k])
+    # ) for k in range(path_length)]
     arrows = [(
         pxs[k], pys[k],
-        np.cos(heading_angles[k]) * np.sign(vs[k]),
-        np.sin(heading_angles[k]) * np.sign(vs[k])
+        np.cos(heading_angles[k]),
+        np.sin(heading_angles[k])
     ) for k in range(path_length)]
 
     arrows_select = arrows[::path_length//10] + [arrows[-1]]   # plot sparse selection of states (including final)
