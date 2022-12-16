@@ -69,7 +69,7 @@ def calc_arc_length_to_tangent(pose1, pose2, circle_center, turn_radius, clockwi
   """
   # Angle between start and end poses
   psi = np.arctan2(pose2[1]-circle_center[1],pose2[0]-circle_center[0]) - np.arctan2(pose1[1]-circle_center[1],pose1[0]-circle_center[0])
-  print(psi)
+  
   # Check for direction
   if clockwise:
     if psi > 0:
@@ -162,21 +162,21 @@ def dubins_rsr(start_pose, end_pose, turn_radius):
   # Calculate right turn circle for start and end poses
   start_circle = pick_circle_center(start_pose, turn_radius, clockwise=True)
   end_circle = pick_circle_center(end_pose, turn_radius, clockwise=True)
-  print("start pose:", start_pose, "end_pose:", end_pose)
-  print("start_circle:", start_circle, "end_circle:", end_circle)
+  # print("start pose:", start_pose, "end_pose:", end_pose)
+  # print("start_circle:", start_circle, "end_circle:", end_circle)
 
   # Calculate outer tangent points between circles
   p_t1, p_t2 = calc_outer_tangent(start_circle, end_circle, turn_radius, clockwise=True)
-  print("p_t1:", p_t1, "p_t2:", p_t2)
+  # print("p_t1:", p_t1, "p_t2:", p_t2)
 
   # Select arc lengths for both circles
   l_arc1 = calc_arc_length_to_tangent(start_pose, p_t1, start_circle, turn_radius, clockwise=True)
   l_arc2 = calc_arc_length_to_tangent(p_t2, end_pose, end_circle, turn_radius, clockwise=True)
-  print("l_arc1:", l_arc1, "l_arc2:", l_arc2)
+  # print("l_arc1:", l_arc1, "l_arc2:", l_arc2)
 
   # Calculate straight segment
   l_straight = calc_straight_length(p_t1, p_t2)
-  print("l_straight:", l_straight)
+  # print("l_straight:", l_straight)
   
   return [l_arc1, l_straight, l_arc2]
 
