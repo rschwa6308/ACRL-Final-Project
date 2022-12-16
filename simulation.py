@@ -124,12 +124,12 @@ def plot_traj_dicts(goal, results):
 
     # Goal arrow
     # plt.arrow(goal[0], goal[1], np.cos(goal[2]), np.sin(goal[2]), color='red', head_width = 0.2, width = 0.05)
-    arrow_color='gold'
+    arrow_color='lime'
     plt.arrow(goal[0], goal[1], 
                 arrow_body_length * np.cos(goal[2]), 
                 arrow_body_length * np.sin(goal[2]), 
                 width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
-                fc=arrow_color, ec='lime', lw=arrow_size*0.7, zorder=4)
+                fc=arrow_color, ec='lime', lw=arrow_size*0.7, zorder=np.inf)
 
     for result in results:
         us = result['us']
@@ -165,7 +165,7 @@ def plot_traj_dicts(goal, results):
                     arrow_body_length * np.cos(heading_angles[0]), 
                     arrow_body_length * np.sin(heading_angles[0]), 
                     width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
-                    fc='gold', ec=arrow_color, lw=arrow_size*0.7, zorder=zorder+2)
+                    fc='red', ec=arrow_color, lw=arrow_size*0.7, zorder=zorder+2)
         # End
         arrow_color='lime'
         plt.arrow(pxs[-1], pys[-1], 

@@ -84,10 +84,12 @@ if __name__ == '__main__':
     print(f"MPC Stabilizing terminated after {len(xs_stabilizing)} iterations")
 
 
-    results = [{'label':"Ref Stabilizing", 'us': ref_traj_us_stablizing, 'xs': ref_traj_xs_stablizing, 'dt': dt, 'color': 'tab:blue', 'zorder': 0}, 
-            {'label':"Ref Dubin's", 'us': ref_traj_us_dubins, 'xs': ref_traj_xs_dubins, 'dt': dt, 'color': 'tab:orange', 'zorder': 0},
-            {'label':"MPC Stabilizing", 'us': us_stabilizing, 'xs': xs_stabilizing, 'dt': dt, 'color': 'tab:green', 'zorder': 1},
-            {'label':"MPC Dubin's", 'us': us_dubins, 'xs': xs_dubins, 'dt': dt, 'color': 'tab:red', 'zorder': 1}]
+    results = [
+        {'label':"Ref Stabilizing", 'us': ref_traj_us_stablizing, 'xs': ref_traj_xs_stablizing, 'dt': dt, 'color': 'tab:blue', 'zorder': 0}, 
+        {'label':"Ref Dubin's", 'us': ref_traj_us_dubins, 'xs': ref_traj_xs_dubins, 'dt': dt, 'color': 'tab:orange', 'zorder': 0},
+        {'label':"MPC Stabilizing", 'us': us_stabilizing, 'xs': xs_stabilizing, 'dt': dt, 'color': 'tab:green', 'zorder': 1},
+        {'label':"MPC Dubin's", 'us': us_dubins, 'xs': xs_dubins, 'dt': dt, 'color': 'tab:red', 'zorder': 1}
+              ]
 
     mpc_stabilizing_term = xs_stabilizing[-1] - goal
     mpc_dubins_term = xs_dubins[-1] - goal
