@@ -10,6 +10,13 @@ class Rover:
         self.goal_threshold = 0.05 # [meters]
         self.state = init_state.state
         self.min_turning_radius = self.wheel_base/(2 * np.sin(self.wheel_angle_limit))
+        self.sKx = 0.005
+        self.sKy = 0.005
+        self.sKtheta = 0.01
+        self.sKpsi = 0.01
+        self.heartBeat = 0
+        self.Sk = np.random.uniform(-1,1,4)
+        self.SkN = 10
 
         self.dynamics = 'ackerman_kbm'
 
@@ -22,7 +29,9 @@ class Rover:
 
         Slip (process noise) is modeled as a random normal added to the turning radius
         """
-        # TODO encorporate slip
+
+        if ((self.heartBeat%self.SkN) == 0):
+            self.Sk = np.random.uniform(-1,1,4)
 
         # get state 
         px, py, theta, psi = self.state
@@ -31,18 +40,20 @@ class Rover:
         v, psi_dot = u
 
         # update state 
-        px_new = px + (v*dt*np.cos(psi)*np.cos(theta))
-        py_new = py + (v*dt*np.cos(psi)*np.sin(theta))
+        px_new = px + (v*dt*(self.sKx*self.Sk[0] + np.cos(psi)*np.cos(theta))) 
+        py_new = py + (v*dt*(self.sKy*self.Sk[1] + np.cos(psi)*np.sin(theta)))
 
         # This line is sus, need to determine how we want to represent angle (0:2pi) (-pi:pi) ?
-        theta_new = (theta + (v*dt*np.sin(psi)*self.wheel_base/2)%(2*np.pi))%(2*np.pi)
+        # theta_new = (theta + (v*dt*np.sin(psi)*self.wheel_base/2)%(2*np.pi) + self.sktheta*Sk[2])%(2*np.pi)
+        theta_new = (theta + (v*dt*(self.sKtheta*self.Sk[2] + np.sin(psi)*self.wheel_base/2))%(2*np.pi))%(2*np.pi)
 
         # clamp turn radius
-        psi_attempt = psi + (psi_dot*dt)
+        psi_attempt = psi + (psi_dot*dt) + self.sKpsi*self.Sk[3]
         psi_new = max(-self.wheel_angle_limit, min(psi_attempt, self.wheel_angle_limit))
 
         # update state stored inside class
         self.state = np.array([px_new, py_new, theta_new, psi_new])
+        self.heartBeat += 1
 
         return self.state
 
