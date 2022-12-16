@@ -2,7 +2,7 @@ import numpy as np
 from state import *
 
 class Rover:
-    def __init__(self, init_state):
+    def __init__(self, init_state, slip=False, dt=0.1):
         self.wheel_angle_limit = 0.5 # [radians]
         self.wheel_angle_velocity_limit = 1 # [radians / sec]
         self.velocity_limit = 1 # [m/s]
@@ -10,14 +10,19 @@ class Rover:
         self.goal_threshold = 0.05 # [meters]
         self.state = init_state.state
         self.min_turning_radius = self.wheel_base/(2 * np.sin(self.wheel_angle_limit))
-        self.sKx = 0.005
-        self.sKy = 0.005
-        self.sKtheta = 0.01
-        self.sKpsi = 0.01
+        if (slip):
+            self.sKx = 0.08
+            self.sKy = 0.08
+            self.sKtheta = 0.01
+            self.sKpsi = 0.001
+        else:
+            self.sKx = 0
+            self.sKy = 0
+            self.sKtheta = 0
+            self.sKpsi = 0
         self.heartBeat = 0
         self.Sk = np.random.uniform(-1,1,4)
-        self.SkN = 10
-
+        self.SkN = int(2/dt)
         self.dynamics = 'ackerman_kbm'
 
     def ackermann_kbm_dynamics(self, u, dt):
@@ -44,7 +49,6 @@ class Rover:
         py_new = py + (v*dt*(self.sKy*self.Sk[1] + np.cos(psi)*np.sin(theta)))
 
         # This line is sus, need to determine how we want to represent angle (0:2pi) (-pi:pi) ?
-        # theta_new = (theta + (v*dt*np.sin(psi)*self.wheel_base/2)%(2*np.pi) + self.sktheta*Sk[2])%(2*np.pi)
         theta_new = (theta + (v*dt*(self.sKtheta*self.Sk[2] + np.sin(psi)*self.wheel_base/2))%(2*np.pi))%(2*np.pi)
 
         # clamp turn radius

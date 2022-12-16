@@ -9,7 +9,7 @@ from rover import *
 from state import *
 from dubins import dubins_main
 
-# np.random.seed(0)
+np.random.seed(0)
 
 # initialize robot 
 x_0 = State(
@@ -23,16 +23,14 @@ x_0 = State(
 # goal = generate_easy_goal_straight(x_0.state)
 goal = generate_easy_goal_turn(x_0.state)
 
-# x_0 = State(0, 0, np.pi/2, 0)
-# goal = np.array([10, 20, np.pi/4, 0])
+dt = 0.1
 
 # Create rovers
 rover = Rover(x_0)
 rover_stabilizing = Rover(x_0)
-rover_mpc_stabilizing = Rover(x_0)
-rover_mpc_dubins = Rover(x_0)
+rover_mpc_stabilizing = Rover(x_0, True, dt)
+rover_mpc_dubins = Rover(x_0, True, dt)
 
-dt = 0.05
 
 # Reference stabilizing controller
 ref_traj_xs_stablizing, _, ref_traj_us_stablizing = simulate(
