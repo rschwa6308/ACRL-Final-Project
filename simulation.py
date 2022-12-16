@@ -24,6 +24,7 @@ def simulate(rover, goal, observation_func, control_law, stopping_condition=None
     xs = [rover.state]
     ys = []
     us = []
+    np.random.seed(0)
 
     for k in range(max_iters):
 
@@ -72,6 +73,7 @@ def simulate_with_MPC(rover, goal, observation_func, MPC_controller, reference_t
     xs = [rover.state]
     ys = []
     us = []
+    np.random.seed(0)
 
     for k in range(max_iters):
 
@@ -108,7 +110,184 @@ def simulate_with_MPC(rover, goal, observation_func, MPC_controller, reference_t
     
     return xs, ys, us
 
+def arrow_params(size):
+    arrow_head_width = 0.15 * size
+    arrow_head_length = 0.1 * size
+    arrow_body_width = 0.03 * size
+    arrow_body_length = 0.15 * size
+    return arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length
 
+def plot_traj_dicts(goal, results):
+
+    arrow_size = 4
+    arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
+
+    # Goal arrow
+    # plt.arrow(goal[0], goal[1], np.cos(goal[2]), np.sin(goal[2]), color='red', head_width = 0.2, width = 0.05)
+    arrow_color='lime'
+    plt.arrow(goal[0], goal[1], 
+                arrow_body_length * np.cos(goal[2]), 
+                arrow_body_length * np.sin(goal[2]), 
+                width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
+                fc=arrow_color, ec='lime', lw=arrow_size*0.7, zorder=0)
+
+    for result in results:
+        us = result['us']
+        xs = result['xs']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+        dt = result['dt']
+
+        path_length = len(us)
+        vs, psi_dots = zip(*us)
+        pxs, pys, heading_angles, steering_angles = zip(*xs)
+
+        # plot the trajectory
+        plt.plot(pxs, pys, label=label, color=color, zorder=zorder, lw=2)
+        plt.axis("equal")
+
+        # plot some nice pose arrows, forwards only
+        
+        # arrows = [(
+        #     pxs[k], pys[k],
+        #     arrow_body_length * np.cos(heading_angles[k]),
+        #     arrow_body_length * np.sin(heading_angles[k])
+        # ) for k in range(path_length)]
+
+        # arrows_select = arrows[::path_length//10] + [arrows[-1]]   # plot sparse selection of states (including final)
+        
+        # Start
+        arrow_color='red'
+        arrow_size = 4
+        arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
+        plt.arrow(pxs[0], pys[0], 
+                    arrow_body_length * np.cos(heading_angles[0]), 
+                    arrow_body_length * np.sin(heading_angles[0]), 
+                    width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
+                    fc='red', ec=arrow_color, lw=arrow_size*0.7, zorder=0)
+        # End
+        arrow_color='lime'
+        arrow_size = 2
+        arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
+        plt.arrow(pxs[-1], pys[-1], 
+                    arrow_body_length * np.cos(heading_angles[-1]), 
+                    arrow_body_length * np.sin(heading_angles[-1]), 
+                    width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
+                    fc=color, ec=arrow_color, lw=arrow_size*0.7, zorder=zorder+2)
+
+        # Trajectory
+        arrow_color='black'
+        arrow_size = 1
+        arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
+        time_step_size_sec = 1
+        step_size = int(time_step_size_sec / dt)
+        for k in range(0,path_length, step_size):
+            plt.arrow(pxs[k], pys[k], 
+                    arrow_body_length * np.cos(heading_angles[k]), 
+                    arrow_body_length * np.sin(heading_angles[k]), 
+                    width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
+                    fc=color, ec=arrow_color, zorder=zorder+1)
+        # plt.quiver(
+        #     *zip(*arrows_select),
+        #     color=["red"] + ["black"]*(len(arrows_select)-2) + ["green"]
+        # )
+    plt.title("Trajectory Results")
+    plt.legend()
+    plt.show()
+
+def plot_us_dicts(rover, results):
+    plt.figure(figsize=(8, 6), dpi=80)
+    plt.subplot(2, 1, 1)
+    plt.axhline(y = rover.velocity_limit, color = 'r', linestyle = 'dotted', label='Bound')
+    plt.axhline(y = -rover.velocity_limit, color = 'r', linestyle = 'dotted')
+
+    for result in results:
+        us = result['us']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+
+        speeds = [u[0] for u in us]
+        delta_steer = [u[1] for u in us]
+        plt.plot(speeds, label=label, color=color, zorder=zorder, lw=2)
+    plt.title("Control Inputs - Velocity")
+    plt.legend()
+
+    plt.subplot(2, 1, 2)
+    plt.axhline(y = rover.wheel_angle_velocity_limit, color = 'r', linestyle = 'dotted', label='Bound')
+    plt.axhline(y = -rover.wheel_angle_velocity_limit, color = 'r', linestyle = 'dotted')
+
+    for result in results:
+        us = result['us']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+        
+        delta_steer = [u[1] for u in us]
+        plt.plot(delta_steer, label=label, color=color, zorder=zorder, lw=2)
+    plt.title("Control Inputs - Change in Steer")
+    plt.legend()
+    plt.show()
+
+def plot_states_dicts(goal, results):
+    pxs_g, pys_g, heading_angles_g, steering_angles_g = goal
+
+    plt.figure(figsize=(8, 6), dpi=80)
+
+    plt.subplot(2, 2, 1)
+    plt.axhline(y = pxs_g, color = 'k', linestyle = 'dotted', label='Goal')
+    for result in results:
+        xs = result['xs']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+
+        pxs, pys, heading_angles, steering_angles = zip(*xs)
+        plt.plot(pxs, label=label, color=color, zorder=zorder, lw=2)
+    plt.title("Px vs. Goal")
+    plt.legend()
+
+    plt.subplot(2, 2, 2)
+    plt.axhline(y = pys_g, color = 'k', linestyle = 'dotted', label='Goal')
+    for result in results:
+        xs = result['xs']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+
+        pxs, pys, heading_angles, steering_angles = zip(*xs)
+        plt.plot(pys, label=label, color=color, zorder=zorder, lw=2)
+    plt.title("Py vs. Goal")
+    plt.legend()
+
+    plt.subplot(2, 2, 3)
+    plt.axhline(y = heading_angles_g, color = 'k', linestyle = 'dotted', label='Goal')
+    for result in results:
+        xs = result['xs']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+
+        pxs, pys, heading_angles, steering_angles = zip(*xs)
+        plt.plot(heading_angles, label=label, color=color, zorder=zorder, lw=2)
+    plt.title("Heading vs. Goal")
+    plt.legend()
+
+    plt.subplot(2, 2, 4)
+    plt.axhline(y = steering_angles_g, color = 'k', linestyle = 'dotted', label='Goal')
+    for result in results:
+        xs = result['xs']
+        label = result['label']
+        color = result['color']
+        zorder = result['zorder']
+
+        pxs, pys, heading_angles, steering_angles = zip(*xs)
+        plt.plot(steering_angles, label=label, color=color, zorder=zorder)
+    plt.title("Steering vs. Goal")
+    plt.legend()
+
+    plt.show()
 
 def plot_traj(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rover2_name=None):
 
@@ -125,10 +304,15 @@ def plot_traj(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rove
     plt.axis("equal")
 
     # plot some nice pose arrows
+    # arrows = [(
+    #     pxs[k], pys[k],
+    #     np.cos(heading_angles[k]) * np.sign(vs[k]),
+    #     np.sin(heading_angles[k]) * np.sign(vs[k])
+    # ) for k in range(path_length)]
     arrows = [(
         pxs[k], pys[k],
-        np.cos(heading_angles[k]) * np.sign(vs[k]),
-        np.sin(heading_angles[k]) * np.sign(vs[k])
+        np.cos(heading_angles[k]),
+        np.sin(heading_angles[k])
     ) for k in range(path_length)]
 
     arrows_select = arrows[::path_length//10] + [arrows[-1]]   # plot sparse selection of states (including final)
@@ -164,7 +348,6 @@ def plot_traj(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rove
     plt.legend()
     plt.show()
 
-    
 def plot_control(rover,goal,xs,us,rover_name, rover2=None, xs2=None, us2=None, rover2_name=None):
 
     speeds = [u[0] for u in us]

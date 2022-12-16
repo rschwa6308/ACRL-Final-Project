@@ -148,21 +148,21 @@ def mpc_controller(x, goal, dt, x_ref, u_ref, k, rover):
     
     n = 4  # state dimension
     m = 2  # control dimension
-    T = 20  # MPC horizon
+    T = 5  # MPC horizon
 
-    iterative_linearization = True
+    iterative_linearization = False
 
     # cost functions
     Q = np.array([[1, 0, 0, 0],
                   [0, 1, 0, 0],
-                  [0, 0, 1, 0],
-                  [0, 0, 0, 1]])
+                  [0, 0, 20, 0],
+                  [0, 0, 0, 1e-2]])
     R = np.array([[1, 0],
                   [0, 1]])
-    Qf = 1e3 * np.array([[1, 0, 0, 0],
-                         [0, 1, 0, 0],
+    Qf = 1e3 * np.array([[1e1, 0, 0, 0],
+                         [0, 1e1, 0, 0],
                          [0, 0, 1, 0],
-                         [0, 0, 0, 1]])
+                         [0, 0, 0, 1e5]])
     # u_ref = np.ones([m*T, 1])
     # x_ref = 2*np.ones([n*T, 1])
     i_ref = find_closest_state_idx(x, x_ref)
