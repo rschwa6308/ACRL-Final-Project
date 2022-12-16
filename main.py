@@ -49,15 +49,8 @@ dubins_end_pose = np.array([goal[0],goal[1],goal[2]])
 ref_traj_xs_dubins = dubins_main(dubins_start_pose, dubins_end_pose, rover_mpc_dubins.min_turning_radius, rover_mpc_dubins.wheel_angle_limit, rover_mpc_dubins.velocity_limit, dt=dt)
 print(f"Dubin's planner terminated after {len(ref_traj_xs_dubins)} iterations")
 
-
-# Append goal states to end of trajectories to assist termination at goal
-# for _ in range(10):
-#     ref_traj_xs_dubins.append(goal)
-#     ref_traj_xs_stablizing.append(goal)
-
 # Dubin's control inputs
 ref_traj_us_dubins = [np.array([1.0, 0.0]) for _ in range(len(ref_traj_xs_dubins))]
-
 
 # run MPC!  :D
 xs_dubins, ys_dubins, us_dubins = simulate_with_MPC(
@@ -71,7 +64,6 @@ xs_dubins, ys_dubins, us_dubins = simulate_with_MPC(
 )
 print(f"MPC Dubin's terminated after {len(xs_dubins)} iterations")
 
-
 xs_stabilizing, ys_stabilizing, us_stabilizing = simulate_with_MPC(
     rover_mpc_stabilizing, goal, perfect_observations,
     mpc_controller,
@@ -82,7 +74,6 @@ xs_stabilizing, ys_stabilizing, us_stabilizing = simulate_with_MPC(
     dt=dt
 )
 print(f"MPC Stabilizing terminated after {len(xs_stabilizing)} iterations")
-
 
 
 results = [{'label':"Ref Stabilizing", 'us': ref_traj_us_stablizing, 'xs': ref_traj_xs_stablizing, 'dt': dt, 'color': 'tab:blue', 'zorder': 0}, 

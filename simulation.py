@@ -24,6 +24,7 @@ def simulate(rover, goal, observation_func, control_law, stopping_condition=None
     xs = [rover.state]
     ys = []
     us = []
+    np.random.seed(0)
 
     for k in range(max_iters):
 
@@ -72,6 +73,7 @@ def simulate_with_MPC(rover, goal, observation_func, MPC_controller, reference_t
     xs = [rover.state]
     ys = []
     us = []
+    np.random.seed(0)
 
     for k in range(max_iters):
 
