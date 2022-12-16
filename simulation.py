@@ -119,7 +119,7 @@ def arrow_params(size):
 
 def plot_traj_dicts(goal, results):
 
-    arrow_size = 2
+    arrow_size = 4
     arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
 
     # Goal arrow
@@ -129,7 +129,7 @@ def plot_traj_dicts(goal, results):
                 arrow_body_length * np.cos(goal[2]), 
                 arrow_body_length * np.sin(goal[2]), 
                 width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
-                fc=arrow_color, ec='lime', lw=arrow_size*0.7, zorder=np.inf)
+                fc=arrow_color, ec='lime', lw=arrow_size*0.7, zorder=0)
 
     for result in results:
         us = result['us']
@@ -159,15 +159,17 @@ def plot_traj_dicts(goal, results):
         
         # Start
         arrow_color='red'
-        arrow_size = 2
+        arrow_size = 4
         arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
         plt.arrow(pxs[0], pys[0], 
                     arrow_body_length * np.cos(heading_angles[0]), 
                     arrow_body_length * np.sin(heading_angles[0]), 
                     width=arrow_body_width, head_width=arrow_head_width, head_length=arrow_head_length, 
-                    fc='red', ec=arrow_color, lw=arrow_size*0.7, zorder=zorder+2)
+                    fc='red', ec=arrow_color, lw=arrow_size*0.7, zorder=0)
         # End
         arrow_color='lime'
+        arrow_size = 2
+        arrow_head_width, arrow_head_length, arrow_body_width, arrow_body_length = arrow_params(arrow_size)
         plt.arrow(pxs[-1], pys[-1], 
                     arrow_body_length * np.cos(heading_angles[-1]), 
                     arrow_body_length * np.sin(heading_angles[-1]), 

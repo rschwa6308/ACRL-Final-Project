@@ -78,7 +78,7 @@ if __name__ == '__main__':
         ref_traj_xs_stablizing,
         ref_traj_us_stablizing,
         stopping_condition=goal_reached_separate_pos_heading,
-        max_iters=1000,
+        max_iters=400,
         dt=dt
     )
     print(f"MPC Stabilizing terminated after {len(xs_stabilizing)} iterations")
