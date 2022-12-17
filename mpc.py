@@ -1,16 +1,8 @@
-# from cvxopt import solvers, matrix
 import numpy as np
 from qpsolvers import solve_qp
 from rover import *
 
-# solvers.options['feastol'] = 1e-8
-# solvers.options['show_progress'] = False
-
-# x = solve_qp(P, q, G, h)
-
-# sol = solvers.qp(Q, p, A, b)
-
-# TODO: MPC SOLVING
+# MPC SOLVING
 #  Input: Current state [x], reference trajectory [X,U], cost matrices Q, R, Q_f, MPC horizon T, linearized dynamics matrices A, B
 #  Output: control u
 
